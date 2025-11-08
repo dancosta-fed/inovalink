@@ -2,13 +2,24 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { getTranslation } from '../utils/translations';
+import { doSignOut } from '../firebase/auth';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { user, language, projects, addReply } = useUser();
+  const { user, language, projects, addReply, setUser } = useUser();
   const [newMessage, setNewMessage] = useState('');
   const t = getTranslation(language);
+
+  const handleLogout = async () => {
+    try {
+      await doSignOut();
+      setUser(null);
+      navigate("/login");
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const project = projects.find(p => p.id === projectId);
 
@@ -34,7 +45,7 @@ const ProjectDetails: React.FC = () => {
 
     addReply(projectId!, {
       userId: user.email,
-      userName: user.email,
+      userName: user.displayName || user.email,
       message: newMessage,
       timestamp: new Date().toISOString(),
       isBusiness: user.userType === 'business'
@@ -72,9 +83,9 @@ const ProjectDetails: React.FC = () => {
               <h1 className="text-xl font-semibold text-gray-900">Inovalink</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-600">{user?.email}</span>
+              <span className="text-gray-600">{user?.displayName || user?.email}</span>
               <button 
-                onClick={() => navigate('/login')}
+                onClick={handleLogout}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 {t.nav.logout}

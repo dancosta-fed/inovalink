@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 export interface User {
   email: string;
   userType: 'freelancer' | 'business';
+  displayName?: string;
 }
 
 export interface Project {

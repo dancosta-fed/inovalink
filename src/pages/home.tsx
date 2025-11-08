@@ -3,15 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import { getTranslation } from "../utils/translations";
 import CreateProjectModal from "../components/CreateProjectModal";
+import { doSignOut } from "../firebase/auth";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { user, language, setLanguage, projects } = useUser();
+  const { user, language, setLanguage, projects, setUser } = useUser();
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const t = getTranslation(language);
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await doSignOut();
+      setUser(null);
+      navigate("/login");
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleProjectClick = (projectId: string) => {
@@ -26,14 +33,12 @@ const Home: React.FC = () => {
   };
 
   const getGreeting = () => {
+    const userName = user?.displayName || user?.email?.split('@')[0] || (language === 'pt' ? 'Usuário' : 'User');
+    
     if (language === 'pt') {
-      return user?.userType === 'freelancer' 
-        ? 'Bem-vindo, Freelancer!' 
-        : 'Bem-vindo, Empresa!';
+      return `Bem-vindo, ${userName}!`;
     } else {
-      return user?.userType === 'freelancer' 
-        ? 'Welcome, Freelancer!' 
-        : 'Welcome, Business!';
+      return `Welcome, ${userName}!`;
     }
   };
 
@@ -65,7 +70,7 @@ const Home: React.FC = () => {
                 </span>
               </div>
               
-              <span className="text-gray-600">{user?.email}</span>
+              <span className="text-gray-600">{user?.displayName || user?.email}</span>
               <button 
                 onClick={handleLogout}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
