@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import { doSignInWithEmailAndPassword, doSignInWithGoogle } from "../firebase/auth";
@@ -16,13 +16,7 @@ const Login: React.FC = () => {
   const { setUser } = useUser();
   const { currentUser } = useAuth();
 
-  useEffect(() => {
-    if (currentUser) {
-      loadUserData();
-    }
-  }, [currentUser]);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -42,7 +36,13 @@ const Login: React.FC = () => {
         console.error('Error loading user data:', error);
       }
     }
-  };
+  }, [currentUser, navigate, setUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadUserData();
+    }
+  }, [currentUser, loadUserData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
